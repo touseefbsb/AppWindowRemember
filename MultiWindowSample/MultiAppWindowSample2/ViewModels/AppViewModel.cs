@@ -21,11 +21,11 @@ namespace MultiAppWindowSample2.ViewModels
                 if (item.AppWindow != null)
                 {
                     var placement = item.AppWindow.GetPlacement();
-                    var regions = new List<DisplayRegion>();
-                    foreach (var dr in item.AppWindow.WindowingEnvironment.GetDisplayRegions())
-                    {
-                        regions.Add(dr);
-                    }
+                    //var regions2 = new List<DisplayRegion>(); 
+                    //foreach (var dr in item.AppWindow.GetDisplayRegions())
+                    //{
+                    //    regions2.Add(dr);// this list is just for testing, it gives me boh monitors/DisplayRegions, but no way to find out where this window resides.
+                    //}
                     //Size is full screen size and can be bigger bcz it also includes taskbar etc.
                     //Display region excludes taskbar etc
                     var displayRegion = placement.DisplayRegion;
@@ -35,11 +35,31 @@ namespace MultiAppWindowSample2.ViewModels
                     var sizeWidth = placement.Size.Width;
                     var sizeHeight = placement.Size.Height;
 
-                    ApplicationData.Current.LocalSettings.Values[$"AppWindow_SecondaryView_Width_{item.Key}"] = sizeWidth > displayRegionWidth ? displayRegionWidth : sizeWidth;
-                    ApplicationData.Current.LocalSettings.Values[$"AppWindow_SecondaryView_Height_{item.Key}"] = sizeHeight > displayRegionHeight ? displayRegionHeight : sizeHeight;
+                    var displayRegionX = displayRegion.WorkAreaOffset.X;
+                    var displayRegionY = displayRegion.WorkAreaOffset.Y;
 
-                    ApplicationData.Current.LocalSettings.Values[$"AppWindow_SecondaryView_X_{item.Key}"] = placement.Offset.X;
-                    ApplicationData.Current.LocalSettings.Values[$"AppWindow_SecondaryView_Y_{item.Key}"] = placement.Offset.Y;
+                    var sizeX = placement.Offset.X;
+                    var sizeY = placement.Offset.Y;
+
+                    var windowAppWidth = sizeWidth > displayRegionWidth ? displayRegionWidth : sizeWidth;
+                    var windowAppHeight = sizeHeight > displayRegionHeight ? displayRegionHeight : sizeHeight;
+                    ApplicationData.Current.LocalSettings.Values[$"AppWindow_SecondaryView_Width_{item.Key}"] = windowAppWidth;
+                    ApplicationData.Current.LocalSettings.Values[$"AppWindow_SecondaryView_Height_{item.Key}"] = windowAppHeight;
+
+                    var windowX = sizeX < displayRegionX ? displayRegionX : sizeX;
+                    var windowY = sizeY < displayRegionY ? displayRegionY : sizeY;
+                    //var windowX = sizeX + 18;
+                    //var windowY = sizeY + 18;
+                    ApplicationData.Current.LocalSettings.Values[$"AppWindow_SecondaryView_X_{item.Key}"] = windowX;
+                    ApplicationData.Current.LocalSettings.Values[$"AppWindow_SecondaryView_Y_{item.Key}"] = windowY;
+
+                    //foreach (var region in item.AppWindow.WindowingEnvironment.GetDisplayRegions())
+                    //{
+                    //    if (region.WorkAreaOffset.X == windowX && region.WorkAreaOffset.Y == windowY)
+                    //    {
+                    //        ApplicationData.Current.LocalSettings.Values[$"AppWindow_SecondaryView_DisplayMonitorDeviceId_{item.Key}"] = region.DisplayMonitorDeviceId;
+                    //    }
+                    //}
                 }
             }
         }
@@ -90,8 +110,21 @@ namespace MultiAppWindowSample2.ViewModels
             var yposition = ApplicationData.Current.LocalSettings.Values[$"AppWindow_SecondaryView_Y_{appWindowViewModel.Key}"];
             if (xposition is double xpos && yposition is double ypos)
             {
-                var placement = appWindowViewModel.AppWindow.GetPlacement();
-                appWindowViewModel.AppWindow.RequestMoveRelativeToDisplayRegion(placement.DisplayRegion, new Point(xpos, ypos));
+                var displayRegion = appWindowViewModel.AppWindow.GetPlacement().DisplayRegion;
+                //if (ApplicationData.Current.LocalSettings.Values[$"AppWindow_SecondaryView_DisplayMonitorDeviceId_{appWindowViewModel.Key}"] is string monitorid)
+                //{
+                //    foreach (var region in appWindowViewModel.AppWindow.WindowingEnvironment.GetDisplayRegions())
+                //    {
+                //        if (region.DisplayMonitorDeviceId == monitorid)
+                //        {
+                //            displayRegion = region;
+                //            break;
+                //        }
+                //    }
+                //}
+                //appWindowViewModel.AppWindow.RequestMoveToDisplayRegion(displayRegion);
+                appWindowViewModel.AppWindow.RequestMoveRelativeToDisplayRegion(displayRegion, new Point(xpos, ypos));
+                //appWindowViewModel.AppWindow.RequestMoveRelativeToCurrentViewContent(new Point(xpos, ypos));
             }
             else
             {
